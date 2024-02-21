@@ -27,6 +27,7 @@ const config: Config = {
       },
       animation: {
         "shake": "shake 0.82s cubic-bezier(.36,.07,.19,.97) both",
+        "pop-in": "pop-in 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) both",
       },
       keyframes: {
         "shake": {
@@ -34,6 +35,10 @@ const config: Config = {
           "20%, 80%": { transform: "translate3d(2px, 0, 0)" },
           "30%, 50%, 70%": { transform: "translate3d(-4px, 0, 0)" },
           "40%, 60%": { transform: "translate3d(4px, 0, 0)" },
+        },
+        "pop-in": {
+          "0%": { transform: "scale(0)" },
+          "100%": { transform: "scale(1)" },
         },
       },
     },

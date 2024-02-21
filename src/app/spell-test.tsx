@@ -15,9 +15,11 @@ import {
   LuInfinity,
   LuX,
   LuGithub,
+  LuHistory,
+  LuHome,
 } from "react-icons/lu";
 import Kbd from "./kbd";
-import { flushSync } from "react-dom";
+import Link from "next/link";
 
 const WORD_OPTIONS = [
   {
@@ -67,7 +69,7 @@ const MAX_WRONG_GUESS_PENALTY = (CORRECT_POINTS * 3) / 4;
 
 type GameState = "idle" | "playing" | "finished";
 
-interface Guess {
+export interface Guess {
   index: number;
   word: string;
   guesses: string[];
@@ -77,7 +79,7 @@ interface Guess {
   guessedAt: number;
 }
 
-interface GameResult {
+export interface GameResult {
   score: number;
   correct: number;
   incorrect: number;
@@ -116,21 +118,16 @@ export default function SpellTest({
     words.sort(() => Math.random() - 0.5),
   );
 
-  const restartGame = () => {
-    flushSync(() => {
-      setWordsShuffled(words.sort(() => Math.random() - 0.5));
-    });
-    startPlaying();
-  };
-
   const startPlaying = () => {
+    const newWordsShuffled = words.sort(() => Math.random() - 0.5);
+    const newCurrentWordIndex = 0;
+    setWordsShuffled(newWordsShuffled);
+    setCurrentWordIndex(newCurrentWordIndex);
     setGameState("playing");
-    setGameHistory([]);
-    setCurrentWordIndex(0);
     setGameHistory([
       {
-        index: currentWordIndex,
-        word: wordsShuffled[currentWordIndex].name,
+        index: newCurrentWordIndex,
+        word: newWordsShuffled[newCurrentWordIndex].name,
         guesses: [],
         replays: 0,
         playedAt: Date.now(),
@@ -142,6 +139,9 @@ export default function SpellTest({
 
   const stopPlaying = () => {
     setGameState("idle");
+    setCurrentWordIndex(0);
+    setGameHistory([]);
+    setCurrentGameResult(null);
   };
 
   const endGame = () => {
@@ -407,7 +407,7 @@ export default function SpellTest({
 
         {(gameState === "playing" || gameState === "idle") && (
           <Timer
-            key={selectedDuration}
+            key={`${selectedDuration}-${gameState}`}
             duration={selectedDuration}
             isRunning={gameState === "playing"}
             onTimeUp={handleTimeout}
@@ -426,7 +426,8 @@ export default function SpellTest({
           />
         ) : gameState === "finished" ? (
           <ResultScreen
-            restartGame={restartGame}
+            restartGame={startPlaying}
+            home={stopPlaying}
             gameResult={currentGameResult!}
           />
         ) : (
@@ -451,9 +452,11 @@ export default function SpellTest({
 
 function ResultScreen({
   restartGame,
+  home,
   gameResult,
 }: {
   restartGame: () => void;
+  home: () => void;
   gameResult: GameResult;
 }) {
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -476,7 +479,7 @@ function ResultScreen({
   }, [gameResult.score]);
 
   useWindowEvent("keydown", (e) => {
-    if (e.key === "r") {
+    if (e.key === " ") {
       restartGame();
     }
   });
@@ -492,7 +495,7 @@ function ResultScreen({
   }, []);
 
   return (
-    <div className="flex flex-col gap-4 items-center justify-center">
+    <div className="flex flex-col gap-4 items-center justify-center animate-pop-in">
       {isHighScore && <audio ref={audioRef} src="/chipi.mp3" autoPlay loop />}
 
       <div className="text-3xl font-semibold text-neutral-200 text-center">
@@ -500,7 +503,12 @@ function ResultScreen({
       </div>
 
       <div className="text-center text-neutral-400 text-xs">
-        {!isHighScore && `Your high score was ${highScore} points. `}
+        {!isHighScore && (
+          <>
+            Your high score was <span className="font-bold">{highScore}</span>{" "}
+            points.{" "}
+          </>
+        )}
         You scored:
       </div>
 
@@ -539,13 +547,23 @@ function ResultScreen({
         )}
       </div>
 
-      <button
-        className="px-4 py-2 rounded-full bg-neutral-200 text-neutral-900 flex items-center gap-2 hover:bg-neutral-300"
-        onClick={restartGame}
-      >
-        Replay
-        <Kbd>r</Kbd>
-      </button>
+      <div className="flex gap-2">
+        <button
+          className="px-4 py-2 rounded-full text-neutral-300 flex items-center gap-2 hover:bg-neutral-800"
+          onClick={home}
+        >
+          <LuHome className="w-4 h-4" />
+          Home
+        </button>
+
+        <button
+          className="px-4 py-2 rounded-full bg-neutral-200 text-neutral-900 flex items-center gap-2 hover:bg-neutral-300"
+          onClick={restartGame}
+        >
+          Replay
+          <Kbd>Space</Kbd>
+        </button>
+      </div>
     </div>
   );
 }
@@ -577,6 +595,8 @@ function Timer({
     }
   }, [timeLeft, onTimeUp]);
 
+  const yabai = timeLeft < 10;
+
   if (duration === Infinity) {
     return (
       <div className="flex items-center gap-2 justify-center text-3xl font-bold text-neutral-300 tabular-nums">
@@ -587,7 +607,14 @@ function Timer({
   }
 
   return (
-    <div className="flex items-center gap-2 justify-center text-3xl font-bold text-neutral-300 tabular-nums">
+    <div
+      className={cn(
+        "flex items-center gap-2 justify-center text-3xl font-bold text-neutral-300 tabular-nums",
+        {
+          "text-red-500 animate-pulse": yabai,
+        },
+      )}
+    >
       <MdAccessTime className="text-neutral-500 text-2xl" />
       <span>
         {Math.floor(timeLeft / 60)}:
@@ -744,7 +771,7 @@ function PlayingScreen({
   }, [speed]);
 
   return (
-    <div className="flex flex-col gap-4 items-center mt-6 relative group">
+    <div className="flex flex-col gap-4 items-center mt-6 relative group animate-pop-in">
       <audio ref={audioRef} hidden autoPlay src={word.path} />
 
       <Stats
@@ -771,7 +798,6 @@ function PlayingScreen({
           value={input}
           onChange={handleInputChange}
           // onKeyDown={handleInputKeyDown}
-          onKeyDownCapture={(e) => console.log(e.key)}
           className="bg-transparent text-neutral-200 focus:outline-none border-b border-neutral-200"
         />
 
@@ -821,7 +847,7 @@ function Stats({
   return (
     <div className="flex gap-2 items-center justify-center text-neutral-500 font-medium tabular-nums w-full">
       <div className="flex gap-1 items-center mr-auto">
-        <span>{n}.</span>
+        <span>Word {n}:</span>
       </div>
       <div className="flex gap-1 items-center w-12">
         <LuCheck className="text-green-500/70" />
@@ -847,7 +873,7 @@ function IntroScreen({ startPlaying }: { startPlaying: () => void }) {
   });
 
   return (
-    <div className="flex flex-col gap-4 items-center p-10">
+    <div className="flex flex-col gap-1 items-center p-10">
       <button
         className="px-4 py-2 rounded-full bg-neutral-200 text-neutral-900 flex items-center gap-2 hover:bg-neutral-300"
         onClick={startPlaying}
@@ -855,6 +881,14 @@ function IntroScreen({ startPlaying }: { startPlaying: () => void }) {
         Start
         <Kbd>Space</Kbd>
       </button>
+
+      <Link
+        href="/history"
+        className="flex items-center gap-2 text-2xs hover:bg-neutral-800 px-3 py-1 rounded-full text-neutral-300"
+      >
+        <LuHistory className="w-3 h-3" />
+        View play history
+      </Link>
     </div>
   );
 }
