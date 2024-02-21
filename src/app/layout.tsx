@@ -17,7 +17,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full">
-      <body className={cn("h-full bg-neutral-950 text-neutral-100 text-sm", inter.className)}>{children}</body>
+      <body className={cn("h-full bg-neutral-950 text-neutral-100 text-sm", inter.className)}>
+        {children}
+      </body>
     </html>
   );
 }

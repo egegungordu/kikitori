@@ -11,10 +11,19 @@ const config: Config = {
       fontSize: {
         "2xs": ".625rem",
       },
+      dropShadow: {
+        "hard": [
+          "0 1px 2px rgba(0, 0, 0, 0.55)",
+          "0 2px 4px rgba(0, 0, 0, 0.55)",
+          "0 4px 8px rgba(0, 0, 0, 0.55)",
+        ],
+      },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
         "gradient-conic":
           "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
+        "rainbow":
+          "conic-gradient(red, yellow, lime, aqua, blue, magenta, red)",
       },
       animation: {
         "shake": "shake 0.82s cubic-bezier(.36,.07,.19,.97) both",

@@ -1,3 +1,3 @@
 export default function Kbd({ children }: { children: React.ReactNode }) {
-  return <kbd className="bg-gradient-to-t from-gray-300 to-white border text-neutral-700 border-neutral-400 shadow-sm shadow-neutral-400 font-semibold text-xs rounded-md px-2 py-0.5">{children}</kbd>;
+  return <kbd className="bg-gradient-to-t from-gray-300 to-white border text-neutral-700 border-neutral-400 shadow-sm shadow-neutral-400 font-semibold text-2xs rounded-md px-2">{children}</kbd>;
 }
