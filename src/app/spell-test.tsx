@@ -407,24 +407,16 @@ export default function SpellTest({
           </div>
         )}
 
-        {(gameState === "playing" || gameState === "idle") && (
-          <Timer
-            key={`${selectedDuration}-${gameState}`}
-            duration={selectedDuration}
-            isRunning={gameState === "playing"}
-            onTimeUp={handleTimeout}
-          />
-        )}
-
         {gameState === "playing" ? (
           <PlayingScreen
             submitWord={submitWord}
             replayWord={replayWord}
+            onTimeout={handleTimeout}
+            onAudioLoad={handleAudioLoad}
             word={wordsShuffled[currentWordIndex]}
             speed={selectedSpeed}
             duration={selectedDuration}
             gameHistory={gameHistory}
-            onAudioLoad={handleAudioLoad}
           />
         ) : gameState === "finished" ? (
           <ResultScreen
@@ -433,7 +425,10 @@ export default function SpellTest({
             gameResult={currentGameResult!}
           />
         ) : (
-          <IntroScreen startPlaying={startPlaying} />
+          <IntroScreen
+            startPlaying={startPlaying}
+            duration={selectedDuration}
+          />
         )}
       </div>
 
@@ -499,7 +494,7 @@ function ResultScreen({
     }
   }, []);
 
-  const {width, height} = useWindowSize();
+  const { width, height } = useWindowSize();
 
   return (
     <>
@@ -570,7 +565,7 @@ function ResultScreen({
             className="px-4 py-2 rounded-full bg-neutral-200 text-neutral-900 flex items-center gap-2 hover:bg-neutral-300"
             onClick={restartGame}
           >
-            Replay
+            Play again
             <Kbd>Space</Kbd>
           </button>
         </div>
@@ -585,7 +580,7 @@ function Timer({
   isRunning,
 }: {
   duration: number;
-  onTimeUp: () => void;
+  onTimeUp?: () => void;
   isRunning: boolean;
 }) {
   const [timeLeft, setTimeLeft] = useState(duration);
@@ -602,7 +597,7 @@ function Timer({
 
   useEffect(() => {
     if (timeLeft <= 0) {
-      onTimeUp();
+      onTimeUp?.();
     }
   }, [timeLeft, onTimeUp]);
 
@@ -650,16 +645,68 @@ function useWindowEvent<K extends keyof WindowEventMap>(
   }, [type, listener, options]);
 }
 
+interface CorrectNotification {
+  action: "correct";
+  word: string;
+}
+
+interface IncorrectNotification {
+  action: "incorrect";
+}
+
+interface ReplayNotification {
+  action: "replay";
+}
+
+type Notification =
+  | CorrectNotification
+  | IncorrectNotification
+  | ReplayNotification;
+
+function NotificationPopup({
+  notification,
+}: {
+  notification: Notification | null;
+}) {
+  return (
+    <div className="w-36 h-6 flex justify-center">
+      {notification && (
+        <div
+          className={cn(
+            "rounded-full absolute text-xs font-semibold animate-notification-in text-neutral-800 px-3 py-1 flex items-center gap-2",
+            {
+              "bg-green-500": notification.action === "correct",
+              "bg-red-500": notification.action === "incorrect",
+              "bg-neutral-300": notification.action === "replay",
+            },
+          )}
+        >
+          {notification?.action === "correct" ? (
+            <span>Correct! &quot;{notification?.word}&quot;</span>
+          ) : notification?.action === "incorrect" ? (
+            <span>Incorrect</span>
+          ) : notification?.action === "replay" ? (
+            <span>Replay</span>
+          ) : null}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function PlayingScreen({
   submitWord,
   replayWord,
+  onTimeout,
   onAudioLoad,
   word,
   speed,
+  duration,
   gameHistory,
 }: {
   submitWord: (guess: string) => boolean;
   replayWord: () => void;
+  onTimeout: () => void;
   onAudioLoad: (duration: number) => void;
   word: { path: string; name: string };
   speed: number;
@@ -669,7 +716,8 @@ function PlayingScreen({
   const inputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
-  const [wrongAnswer, setWrongAnswer] = useState(false);
+  const lastNotificationTimeout = useRef<NodeJS.Timeout | null>(null);
+  const [notification, setNotification] = useState<Notification | null>(null);
   const [input, setInput] = useState("");
   const buttonDisabled = !input.trim();
   const { correct, incorrect, replays } = useMemo(
@@ -701,22 +749,47 @@ function PlayingScreen({
 
     if (correct) {
       setInput("");
+      triggerCorrectNotification(input);
     } else {
-      triggerWrongAnswer();
+      triggerIncorrectNotification();
     }
 
     focusInput();
   };
 
-  const triggerWrongAnswer = () => {
-    setWrongAnswer(true);
-    setTimeout(() => {
-      setWrongAnswer(false);
-    }, 300);
+  const triggerIncorrectNotification = () => {
+    if (lastNotificationTimeout.current) {
+      clearTimeout(lastNotificationTimeout.current);
+    }
+    setNotification({ action: "incorrect" });
+    lastNotificationTimeout.current = setTimeout(() => {
+      setNotification(null);
+    }, 800);
+  };
+
+  const triggerCorrectNotification = (word: string) => {
+    if (lastNotificationTimeout.current) {
+      clearTimeout(lastNotificationTimeout.current);
+    }
+    setNotification({ action: "correct", word });
+    lastNotificationTimeout.current = setTimeout(() => {
+      setNotification(null);
+    }, 1500);
+  };
+
+  const triggerReplayNotification = () => {
+    if (lastNotificationTimeout.current) {
+      clearTimeout(lastNotificationTimeout.current);
+    }
+    setNotification({ action: "replay" });
+    lastNotificationTimeout.current = setTimeout(() => {
+      setNotification(null);
+    }, 800);
   };
 
   const replay = () => {
     replayWord();
+    triggerReplayNotification();
 
     if (audioRef.current) {
       audioRef.current.currentTime = 0;
@@ -728,13 +801,6 @@ function PlayingScreen({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInput(e.target.value.replace(/[^a-zA-Z]/g, ""));
   };
-
-  // const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-  //   console.log("key", e.keyCode);
-  //   if (e.key === "Escape") {
-  //     setIsPlaying(false);
-  //   }
-  // };
 
   const focusInput = () => {
     inputRef.current?.focus();
@@ -785,6 +851,17 @@ function PlayingScreen({
     <div className="flex flex-col gap-4 items-center mt-6 relative group animate-pop-in">
       <audio ref={audioRef} hidden autoPlay src={word.path} />
 
+      <NotificationPopup
+        notification={notification}
+      />
+
+      <Timer
+        key={duration}
+        duration={duration}
+        isRunning={true}
+        onTimeUp={onTimeout}
+      />
+
       <Stats
         n={gameHistory.length}
         correct={correct}
@@ -797,8 +874,9 @@ function PlayingScreen({
       </div>
 
       <form
-        data-wrong={wrongAnswer}
-        className="gap-2 flex data-[wrong='true']:animate-shake"
+        className={cn("gap-2 flex", {
+          "animate-shake": notification?.action === "incorrect",
+        })}
         onSubmit={submitWord_}
       >
         <input
@@ -876,7 +954,13 @@ function Stats({
   );
 }
 
-function IntroScreen({ startPlaying }: { startPlaying: () => void }) {
+function IntroScreen({
+  startPlaying,
+  duration,
+}: {
+  startPlaying: () => void;
+  duration: number;
+}) {
   useWindowEvent("keydown", (e) => {
     if (e.key === " ") {
       startPlaying();
@@ -884,7 +968,9 @@ function IntroScreen({ startPlaying }: { startPlaying: () => void }) {
   });
 
   return (
-    <div className="flex flex-col gap-1 items-center p-10">
+    <div className="flex flex-col gap-3 items-center p-10">
+      <Timer key={duration} duration={duration} isRunning={false} />
+
       <button
         className="px-4 py-2 rounded-full bg-neutral-200 text-neutral-900 flex items-center gap-2 hover:bg-neutral-300"
         onClick={startPlaying}
