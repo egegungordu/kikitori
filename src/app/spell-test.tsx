@@ -20,6 +20,8 @@ import {
 } from "react-icons/lu";
 import Kbd from "./kbd";
 import Link from "next/link";
+import Confetti from "react-confetti";
+import { useWindowSize } from "react-use";
 
 const WORD_OPTIONS = [
   {
@@ -467,8 +469,11 @@ function ResultScreen({
       localStorage.getItem("gameResults") || "[]",
     );
 
+    // only consider the high score if the duration is the same
     const highScore = Math.max(
-      ...allGameResults.map((result: GameResult) => result.score),
+      ...allGameResults
+        .filter((r: GameResult) => r.duration === gameResult.duration)
+        .map((r: GameResult) => r.score),
       0,
     );
 
@@ -476,7 +481,7 @@ function ResultScreen({
       isHighScore: gameResult.score >= highScore,
       highScore,
     };
-  }, [gameResult.score]);
+  }, [gameResult]);
 
   useWindowEvent("keydown", (e) => {
     if (e.key === " ") {
@@ -494,77 +499,83 @@ function ResultScreen({
     }
   }, []);
 
+  const {width, height} = useWindowSize();
+
   return (
-    <div className="flex flex-col gap-4 items-center justify-center animate-pop-in">
-      {isHighScore && <audio ref={audioRef} src="/chipi.mp3" autoPlay loop />}
+    <>
+      {isHighScore && <Confetti width={width} height={height} />}
 
-      <div className="text-3xl font-semibold text-neutral-200 text-center">
-        {isHighScore ? "🎉 New high score! 🎉" : "Nice try!"}
-      </div>
+      <div className="flex flex-col gap-4 items-center justify-center animate-pop-in">
+        {isHighScore && <audio ref={audioRef} src="/chipi.mp3" autoPlay loop />}
 
-      <div className="text-center text-neutral-400 text-xs">
-        {!isHighScore && (
-          <>
-            Your high score was <span className="font-bold">{highScore}</span>{" "}
-            points.{" "}
-          </>
-        )}
-        You scored:
-      </div>
-
-      <div className="flex relative isolate justify-center items-center gap-2 px-12 py-8">
-        <div className="text-6xl font-semibold drop-shadow-hard">
-          {gameResult.score}
+        <div className="text-3xl font-semibold text-neutral-200 text-center">
+          {isHighScore ? "🎉 New high score! 🎉" : "Nice try!"}
         </div>
 
-        <span className="inline text-neutral-300 text-xs drop-shadow-hard">
-          points
-        </span>
+        <div className="text-center text-neutral-400 text-xs">
+          {!isHighScore && (
+            <>
+              Your high score was <span className="font-bold">{highScore}</span>{" "}
+              points.{" "}
+            </>
+          )}
+          You scored:
+        </div>
 
-        {isHighScore && (
-          <div className="absolute items-center justify-center -z-10 -m-1 inset-0 rounded-3xl flex overflow-hidden">
-            <div className="h-[350%] aspect-square bg-rainbow animate-spin" />
+        <div className="flex relative isolate justify-center items-center gap-2 px-12 py-8">
+          <div className="text-6xl font-semibold drop-shadow-hard">
+            {gameResult.score}
           </div>
-        )}
 
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        {isHighScore && (
-          <img
-            src="/chipi.gif"
-            alt="Chipi"
-            className="-z-10 absolute opacity-95 rounded-3xl border border-neutral-700 shadow-2xl shadow-white/20 w-full h-full object-cover"
-          />
-        )}
+          <span className="inline text-neutral-300 text-xs drop-shadow-hard">
+            points
+          </span>
 
-        {!isHighScore && (
-          <video
-            ref={videoRef}
-            src="/sad.mp4"
-            autoPlay
-            loop
-            className="absolute -z-10 w-full h-full object-cover rounded-3xl border border-neutral-700 shadow-2xl ring ring-white/80"
-          />
-        )}
+          {isHighScore && (
+            <div className="absolute items-center justify-center -z-10 -m-1 inset-0 rounded-3xl flex overflow-hidden">
+              <div className="h-[350%] aspect-square bg-rainbow animate-spin" />
+            </div>
+          )}
+
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          {isHighScore && (
+            <img
+              src="/chipi.gif"
+              alt="Chipi"
+              className="-z-10 absolute opacity-95 rounded-3xl border border-neutral-700 shadow-2xl shadow-white/20 w-full h-full object-cover"
+            />
+          )}
+
+          {!isHighScore && (
+            <video
+              ref={videoRef}
+              src="/sad.mp4"
+              autoPlay
+              loop
+              className="absolute -z-10 w-full h-full object-cover rounded-3xl border border-neutral-700 shadow-2xl ring ring-white/80"
+            />
+          )}
+        </div>
+
+        <div className="flex gap-2">
+          <button
+            className="px-4 py-2 rounded-full text-neutral-300 flex items-center gap-2 hover:bg-neutral-800"
+            onClick={home}
+          >
+            <LuHome className="w-4 h-4" />
+            Home
+          </button>
+
+          <button
+            className="px-4 py-2 rounded-full bg-neutral-200 text-neutral-900 flex items-center gap-2 hover:bg-neutral-300"
+            onClick={restartGame}
+          >
+            Replay
+            <Kbd>Space</Kbd>
+          </button>
+        </div>
       </div>
-
-      <div className="flex gap-2">
-        <button
-          className="px-4 py-2 rounded-full text-neutral-300 flex items-center gap-2 hover:bg-neutral-800"
-          onClick={home}
-        >
-          <LuHome className="w-4 h-4" />
-          Home
-        </button>
-
-        <button
-          className="px-4 py-2 rounded-full bg-neutral-200 text-neutral-900 flex items-center gap-2 hover:bg-neutral-300"
-          onClick={restartGame}
-        >
-          Replay
-          <Kbd>Space</Kbd>
-        </button>
-      </div>
-    </div>
+    </>
   );
 }
 
