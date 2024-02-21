@@ -391,7 +391,7 @@ export default function SpellTest({
         </div>
       </div>
 
-      <div className="my-auto mx-auto max-w-md px-10 pt-4">
+      <div className="my-auto mx-auto max-w-md px-4 sm:px-10 pt-4">
         {gameState == "playing" && (
           <div className="mb-10">
             <button
