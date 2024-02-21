@@ -1,7 +1,14 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 export default function Kbd({ children }: { children: React.ReactNode }) {
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    setIsMobile(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+
+  }, []);
 
   if (isMobile) {
     return null
