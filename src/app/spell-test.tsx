@@ -87,7 +87,7 @@ export interface GameResult {
   incorrect: number;
   replays: number;
   wordTypes: string[];
-  speed: number;
+  speed: string;
   duration: number;
   date: number;
   history: Guess[];
@@ -195,7 +195,7 @@ export default function SpellTest({
       wordTypes: Object.entries(selectedWordTypes)
         .filter(([, value]) => value)
         .map(([key]) => key),
-      speed: selectedSpeed,
+      speed: SPEED_OPTIONS.find((speed) => speed.value === selectedSpeed)!.name,
       duration: selectedDuration,
       date: Date.now(),
       history: gameHistory,

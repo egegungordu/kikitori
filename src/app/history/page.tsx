@@ -40,44 +40,39 @@ export default function History() {
         Total games: {gameResults.length}
       </div>
 
-      <div className="flex flex-col items-center tabular-nums py-4">
-        {gameResults.map((result, index) => (
-          <div
-            key={index}
-            className="flex items-center p-1 divide-x divide-neutral-600"
-          >
-            <span className="text-xs flex flex-col px-2">
-              <span>
-                {new Date(result.date).toLocaleDateString(undefined, {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </span>
-              <span>
-                {new Date(result.date).toLocaleTimeString(undefined, {
-                  hour: "numeric",
-                  minute: "numeric",
-                })}
-              </span>
-            </span>
-
-            <span className="text-xs px-2 w-12 text-end font-semibold">{result.score.toFixed(3)}</span>
-
-            <span className="text-xs px-2 w-12 text-end font-semibold">
-              {result.correct}
-            </span>
-
-            <span className="text-xs px-2 w-12 text-end font-semibold">
-              {result.incorrect}
-            </span>
-
-            <span className="text-xs px-2 w-12 text-end font-semibold">
-              {result.replays}
-            </span>
-          </div>
-        ))}
-      </div>
+      <table className="table-auto tabular-nums mx-auto my-10 rounded-xl overflow-hidden">
+        <thead>
+          <tr className="bg-neutral-800 divide-x divide-neutral-600">
+            <th className="px-4 py-2 font-normal text-neutral-400 text-xs">Date</th>
+            <th className="px-4 py-2 font-normal text-neutral-400 text-xs">Word Types</th>
+            <th className="px-4 py-2 font-normal text-neutral-400 text-xs">Speed</th>
+            <th className="px-4 py-2 font-normal text-neutral-400 text-xs">Duration</th>
+            <th className="px-4 py-2 font-normal text-neutral-400 text-xs">Score</th>
+          </tr>
+        </thead>
+        <tbody className="text-end">
+          {gameResults.map((gameResult, index) => {
+            const date = new Date(gameResult.date);
+            const formattedDate = date.toLocaleDateString("en-US", {  
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+              hour: "numeric",
+              minute: "numeric",
+              second: "numeric",
+            });
+            return (
+              <tr key={index} className="divide-x divide-neutral-800 odd:bg-neutral-900 text-xs text-neutral-300 hover:text-neutral-200 hover:bg-neutral-800">
+                <td className="px-4 py-2">{formattedDate}</td>
+                <td className="px-4 py-2">{gameResult.wordTypes.join(", ")}</td>
+                <td className="px-4 py-2">{gameResult.speed}</td>
+                <td className="px-4 py-2">{gameResult.duration} seconds</td>
+                <td className="px-4 py-2">{gameResult.score.toFixed(3)}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </main>
   );
 }
