@@ -522,8 +522,8 @@ function ResultScreen({
         </span>
 
         {isHighScore && (
-          <div className="absolute items-center justify-center -z-10 -m-1 inset-0 overflow-hidden rounded-full flex">
-            <div className="w-full aspect-square bg-rainbow animate-spin" />
+          <div className="absolute items-center justify-center -z-10 -m-1 inset-0 rounded-3xl flex overflow-hidden">
+            <div className="h-[350%] aspect-square bg-rainbow animate-spin" />
           </div>
         )}
 
@@ -532,7 +532,7 @@ function ResultScreen({
           <img
             src="/chipi.gif"
             alt="Chipi"
-            className="-z-10 absolute opacity-95 rounded-full border border-neutral-700 shadow-2xl shadow-white/20 w-full h-full object-cover"
+            className="-z-10 absolute opacity-95 rounded-3xl border border-neutral-700 shadow-2xl shadow-white/20 w-full h-full object-cover"
           />
         )}
 
@@ -542,7 +542,7 @@ function ResultScreen({
             src="/sad.mp4"
             autoPlay
             loop
-            className="absolute -z-10 w-full h-full object-cover rounded-full border border-neutral-700 shadow-2xl ring ring-white/80"
+            className="absolute -z-10 w-full h-full object-cover rounded-3xl border border-neutral-700 shadow-2xl ring ring-white/80"
           />
         )}
       </div>
