@@ -150,7 +150,7 @@ export default function SpellTest({
     setGameState("finished");
 
     // create new game result
-    const { correct, incorrect, replays, score } = gameHistory.reduce(
+    const { correct, incorrect, replays, nonNormalizedScore } = gameHistory.reduce(
       (acc, guess) => {
         const lastGuess = guess.guesses.at(guess.guesses.length - 1);
 
@@ -174,13 +174,18 @@ export default function SpellTest({
           -wrongGuesses * WRONG_GUESS_PENALTY,
         );
 
-        acc.score +=
+        acc.nonNormalizedScore +=
           rightGuesses * CORRECT_POINTS * replayPenalty + wrongGuessPenalty;
 
         return acc;
       },
-      { correct: 0, incorrect: 0, replays: 0, score: 0 },
+      { correct: 0, incorrect: 0, replays: 0, nonNormalizedScore: 0 },
     );
+
+    // last - first
+    const duration = gameHistory.at(gameHistory.length - 1)!.playedAt - gameHistory.at(0)!.playedAt;
+
+    const score = nonNormalizedScore / duration * 10000;
 
     const gameResult: GameResult = {
       score,
@@ -510,7 +515,7 @@ function ResultScreen({
         <div className="text-center text-neutral-400 text-xs">
           {!isHighScore && (
             <>
-              Your high score was <span className="font-bold">{highScore}</span>{" "}
+              Your high score was <span className="font-bold">{highScore.toFixed(3)}</span>{" "}
               points.{" "}
             </>
           )}
@@ -519,7 +524,7 @@ function ResultScreen({
 
         <div className="flex relative isolate justify-center items-center gap-2 px-12 py-8">
           <div className="text-6xl font-semibold drop-shadow-hard">
-            {gameResult.score}
+            {gameResult.score.toFixed(3)}
           </div>
 
           <span className="inline text-neutral-300 text-xs drop-shadow-hard">

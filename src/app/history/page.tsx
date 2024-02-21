@@ -62,7 +62,7 @@ export default function History() {
               </span>
             </span>
 
-            <span className="text-xs px-2 w-12 text-end font-semibold">{result.score}</span>
+            <span className="text-xs px-2 w-12 text-end font-semibold">{result.score.toFixed(3)}</span>
 
             <span className="text-xs px-2 w-12 text-end font-semibold">
               {result.correct}
