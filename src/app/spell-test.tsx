@@ -183,10 +183,14 @@ export default function SpellTest({
     );
 
     // last - first
-    // 1 if no history
-    const duration = (gameHistory.at(gameHistory.length - 1)?.playedAt ?? 1) - (gameHistory.at(0)?.playedAt ?? 0);
+    // equal to 1 if timeout without any guesses
+    const duration = gameHistory.length === 1 ? 1 : gameHistory.at(gameHistory.length - 1)!.playedAt - gameHistory.at(0)!.playedAt;
+
+    console.log("duration", duration);
+    console.log("nonNormalizedScore", nonNormalizedScore);
 
     const score = nonNormalizedScore / duration * 10000;
+    console.log("score", score);
 
     const gameResult: GameResult = {
       score,
