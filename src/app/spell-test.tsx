@@ -183,7 +183,7 @@ export default function SpellTest({
     );
 
     // last - first
-    const duration = gameHistory.at(gameHistory.length - 1)!.playedAt - gameHistory.at(0)!.playedAt;
+    const duration = (gameHistory.at(gameHistory.length - 1)?.playedAt ?? 0) - (gameHistory.at(0)?.playedAt ?? 0);
 
     const score = nonNormalizedScore / duration * 10000;
 
