@@ -29,6 +29,7 @@ const config: Config = {
         "shake": "shake 0.82s cubic-bezier(.36,.07,.19,.97) both",
         "pop-in": "pop-in 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) both",
         "notification-in": "notification-in 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) both",
+        "opacity-in": "opacity-in 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) both",
       },
       keyframes: {
         "shake": {
@@ -44,6 +45,10 @@ const config: Config = {
         "notification-in": {
           "0%": { transform: "translateY(100%) scale(0.8)" },
           "100%": { transform: "translateY(0) scale(1)" },
+        },
+        "opacity-in": {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
         },
       },
     },
